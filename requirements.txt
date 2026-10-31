@@ -1,0 +1,8 @@
+flask
+opencv-python
+mediapipe==0.10.14
+numpy
+sentence-transformers
+faiss-cpu
+huggingface_hub
+python-dotenv

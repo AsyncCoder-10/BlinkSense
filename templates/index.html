@@ -1,0 +1,369 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AttentionAI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --blue: #2563eb;
+        --blue-d: #1e3a8a;
+        --blue-l: #eff6ff;
+        --line: #dbeafe;
+        --txt: #0f172a;
+        --mut: #64748b;
+        --ok: #16a34a;
+        --warn: #f59e0b;
+        --bad: #dc2626;
+        --glow: rgba(22, 163, 74, 0.35);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", sans-serif;
+        color: var(--txt);
+        background:
+          radial-gradient(circle at 10% 0%, #dbeafe 0, transparent 40%), #f4f8ff;
+      }
+      header {
+        background: linear-gradient(90deg, #1e3a8a, #2563eb 60%, #3b82f6);
+        color: #fff;
+        padding: 16px 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: 0.3px;
+      }
+      header span {
+        opacity: 0.85;
+        font-size: 13px;
+      }
+      main {
+        max-width: 1300px;
+        margin: 24px auto;
+        padding: 0 20px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+      }
+      .col {
+        display: grid;
+        gap: 20px;
+        align-content: start;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+      }
+      .card h3 {
+        margin: 0 0 14px;
+        font-size: 12px;
+        color: var(--mut);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .video {
+        position: relative;
+        padding: 12px;
+        transition: box-shadow 0.3s;
+      }
+      .video.Focused {
+        box-shadow:
+          0 0 0 3px var(--ok),
+          0 8px 30px rgba(22, 163, 74, 0.25);
+      }
+      .video.Distracted {
+        box-shadow:
+          0 0 0 3px var(--warn),
+          0 8px 30px rgba(245, 158, 11, 0.3);
+      }
+      .video.Drowsy {
+        box-shadow:
+          0 0 0 3px var(--bad),
+          0 8px 30px rgba(220, 38, 38, 0.3);
+      }
+      .video img {
+        width: 100%;
+        border-radius: 12px;
+        display: block;
+        background: #1e293b;
+        min-height: 300px;
+      }
+      .badge {
+        position: absolute;
+        top: 26px;
+        right: 26px;
+        padding: 8px 18px;
+        border-radius: 999px;
+        color: #fff;
+        font-weight: 700;
+        background: var(--ok);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        transition: background 0.3s;
+      }
+      .badge.Distracted {
+        background: var(--warn);
+      }
+      .badge.Drowsy {
+        background: var(--bad);
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .ring {
+        --p: 0;
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        flex: none;
+        display: grid;
+        place-items: center;
+        background: conic-gradient(
+          var(--blue) calc(var(--p) * 1%),
+          var(--line) 0
+        );
+        transition: background 0.4s;
+      }
+      .ring div {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 2px 8px rgba(37, 99, 235, 0.15);
+      }
+      .ring b {
+        font-size: 30px;
+        color: var(--blue-d);
+        line-height: 1;
+      }
+      .ring small {
+        color: var(--mut);
+        font-size: 11px;
+        margin-top: 2px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        flex: 1;
+      }
+      .stat {
+        background: linear-gradient(135deg, #eff6ff, #e0ecff);
+        border-radius: 14px;
+        padding: 10px 12px;
+      }
+      .stat small {
+        color: var(--mut);
+        font-size: 11px;
+      }
+      .stat b {
+        display: block;
+        font-size: 20px;
+        color: var(--blue-d);
+        margin-top: 2px;
+      }
+
+      #stage3d {
+        width: 100%;
+        height: 240px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 35%, #dbeafe, #bfdbfe 70%);
+      }
+      .bars {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .bar small {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--mut);
+      }
+      .bar small b {
+        color: var(--txt);
+      }
+      .track {
+        position: relative;
+        height: 8px;
+        background: var(--line);
+        border-radius: 6px;
+        margin-top: 5px;
+      }
+      .track::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -2px;
+        width: 2px;
+        height: 12px;
+        background: #93c5fd;
+      }
+      .dot {
+        position: absolute;
+        top: -3px;
+        width: 14px;
+        height: 14px;
+        margin-left: -7px;
+        border-radius: 50%;
+        background: var(--blue);
+        left: 50%;
+        transition: left 0.15s;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.5);
+      }
+      .tag {
+        margin-top: 14px;
+        font-size: 13px;
+        color: var(--mut);
+      }
+      .tag b {
+        color: var(--blue-d);
+      }
+
+      canvas {
+        width: 100%;
+        height: 120px;
+      }
+      .btns {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      button,
+      .btn {
+        background: var(--blue);
+        color: #fff;
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+      button.alt {
+        background: #fff;
+        color: var(--blue);
+        border: 1px solid var(--blue);
+      }
+      button:hover,
+      .btn:hover {
+        background: var(--blue-d);
+        color: #fff;
+        transform: translateY(-1px);
+      }
+      #coach {
+        white-space: pre-wrap;
+        line-height: 1.55;
+        font-size: 14px;
+        margin: 0;
+        color: #334155;
+      }
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🚀 BlinkSense</h1>
+      <span>Webcam → Analyze → Understand → Alert → Measure</span>
+    </header>
+    <main>
+      <div class="col">
+        <div class="card video" id="vbox">
+          <img src="/video" />
+          <div class="badge" id="badge">--</div>
+        </div>
+        <div class="card">
+          <h3>Attention score over time</h3>
+          <canvas id="chart" width="800" height="120"></canvas>
+        </div>
+        <div class="card">
+          <h3>🎓 Study coach</h3>
+          <p id="coach">Finish a session, then click "Coach feedback".</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Attention</h3>
+          <div class="top">
+            <div class="ring" id="ring">
+              <div><b id="score">0</b><small>% focused</small></div>
+            </div>
+            <div class="grid">
+              <div class="stat">
+                <small>🔥 Focus streak</small><b><span id="streak">0</span>s</b>
+              </div>
+              <div class="stat">
+                <small>🏆 Best streak</small><b><span id="best">0</span>m</b>
+              </div>
+              <div class="stat">
+                <small>🟡 Distracted</small><b><span id="dis">0</span>%</b>
+              </div>
+              <div class="stat">
+                <small>🔴 Drowsy</small><b><span id="dro">0</span>%</b>
+              </div>
+              <div class="stat">
+                <small>👁️ Blinks</small><b id="blinks">0</b>
+              </div>
+              <div class="stat"><small>👀 Gaze</small><b id="gaze">--</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Head position (3D)</h3>
+          <div id="stage3d"></div>
+          <div class="bars">
+            <div class="bar">
+              <small>Yaw (left/right)<b id="yv">0°</b></small>
+              <div class="track"><div class="dot" id="yd"></div></div>
+            </div>
+            <div class="bar">
+              <small>Pitch (up/down)<b id="pv">0°</b></small>
+              <div class="track"><div class="dot" id="pd"></div></div>
+            </div>
+            <div class="bar">
+              <small>Roll (tilt)<b id="rv">0°</b></small>
+              <div class="track"><div class="dot" id="rd"></div></div>
+            </div>
+          </div>
+          <div class="tag">Head: <b id="htxt">--</b></div>
+        </div>
+        <div class="card">
+          <h3>Controls</h3>
+          <div class="btns">
+            <button class="alt" onclick="resetAll()">Reset</button>
+            <a class="btn" href="/api/export">Export CSV</a>
+            <!-- <button onclick="getCoach()">Coach feedback</button> -->
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/static/head3d.js?v=1"></script>
+    <script src="/static/app.js?v=4"></script>
+  </body>
+</html>
